@@ -4,7 +4,7 @@ import pandas
 import numpy
 import xgboost as xgb
 
-from typos_correction.utils import rank_candidates
+from lookout.style.typos_checker.typos_correction.utils import rank_candidates
 
 
 class CandidatesRanker:

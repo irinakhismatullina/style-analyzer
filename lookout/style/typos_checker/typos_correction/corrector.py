@@ -6,11 +6,11 @@ from itertools import chain
 
 from gensim.models import FastText
 
-from typos_correction.utils import suggestions_to_df
-from typos_correction.candidates_generation import (CandidatesGenerator, CorrectionsFinder,
-                                                    get_candidates_features,
-                                                    get_candidates_tokens)
-from typos_correction.ranking import CandidatesRanker
+from lookout.style.typos_checker.typos_correction.candidates_generation import (CandidatesGenerator,
+                                                                                CorrectionsFinder,
+                                                                                get_candidates_features,
+                                                                                get_candidates_tokens)
+from lookout.style.typos_checker.typos_correction.ranking import CandidatesRanker
 
 
 class TyposCorrector(Model):

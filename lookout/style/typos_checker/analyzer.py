@@ -23,13 +23,13 @@ class CommentsCheckingAnalyzer(Analyzer):
         changes = data["changes"]
         comments = []
         for change in changes:
-            old_comments = set([node.token
-                                for node in uast2sequence(change.base.uast)
+            old_comments = set([node.token for node in uast2sequence(change.base.uast)
                                 if bblfsh.role_id("COMMENT")
                                 in node.roles])
             comment_nodes = [node for node in uast2sequence(change.head.uast)
                              if bblfsh.role_id("COMMENT") in node.roles and
                              node.token not in old_comments]
+            print(len(comment_nodes))
             comments = [node.token for node in comment_nodes]
             if len(comments) > 0:
                 suggestions = self.model.correct_comments(comments)

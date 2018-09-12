@@ -7,7 +7,7 @@ from keras.layers import Dense
 from keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import train_test_split
 
-from typos_correction.utils import collect_embeddings
+from lookout.style.typos_checker.typos_correction.utils import collect_embeddings
 
 
 def get_features(fasttext, typos) -> numpy.ndarray:

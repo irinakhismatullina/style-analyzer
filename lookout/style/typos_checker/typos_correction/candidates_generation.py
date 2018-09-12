@@ -6,14 +6,13 @@ from modelforge import split_strings, merge_strings
 import pandas
 import numpy
 import keras
-from sklearn.preprocessing import normalize
 from scipy.spatial.distance import cosine
-from gensim.models import FastText
 from tqdm import tqdm
 
-from pysymspell.symspell import SymSpell, EditDistance
-from typos_correction.utils import (read_frequencies, read_vocabulary, add_context_info, collect_embeddings)
-from typos_correction.nn_prediction import get_predictions
+from lookout.style.typos_checker.typos_correction.pysymspell.symspell import SymSpell, EditDistance
+from lookout.style.typos_checker.typos_correction.utils import (read_frequencies, read_vocabulary,
+                                                                add_context_info, collect_embeddings)
+from lookout.style.typos_checker.typos_correction.nn_prediction import get_predictions
 
 
 TypoInfo = NamedTuple("TypoInfo", [("index", int),

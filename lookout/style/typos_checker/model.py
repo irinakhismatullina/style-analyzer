@@ -3,6 +3,7 @@ from collections import defaultdict
 
 import pandas
 
+from lookout.core.analyzer import AnalyzerModel
 from lookout.style.typos_checker.typos_correction.corrector import TyposCorrector
 from lookout.style.typos_checker.typos_correction.utils import read_vocabulary, suggestions_to_df
 
@@ -37,8 +38,6 @@ class CommentsCheckingModel(AnalyzerModel):
         for key, corrections in suggestions.items():
             comments_suggestions[typos.loc[key].comment_id][typos.loc[key].typo] = corrections
         return comments_suggestions
-
-    def train
 
     def dump(self) -> str:
         return "Typos correcting model with vocabulary size %d" % len(self.vocabulary)
