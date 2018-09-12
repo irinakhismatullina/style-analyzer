@@ -24,7 +24,7 @@ class CommentsCheckingModel(AnalyzerModel):
 
     def correct_comments(self, comments: list) -> pandas.DataFrame:
         typos = []
-        for comment_id, comment in comments:
+        for comment_id, comment in enumerate(comments):
             split = re.compile("\w+").findall(comment)
             for i in range(len(split)):
                 if split[i] in self.vocabulary:
@@ -32,6 +32,8 @@ class CommentsCheckingModel(AnalyzerModel):
                 left = max(0, i - 2)
                 right = min(len(split), i + 3)
                 typos.append([comment_id, split[i], split[left:i], split[i + 1:right]])
+        if not len(typos):
+            return {}
         typos = pandas.DataFrame(typos, columns=["comment_id", "typo", "before", "after"])
         suggestions = self.corrector.suggest(typos, n_candidates=3, return_all=False)
         comments_suggestions = defaultdict(dict)
