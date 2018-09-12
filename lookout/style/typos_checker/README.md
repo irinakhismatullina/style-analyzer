@@ -25,12 +25,14 @@ where:
 - `gh-token` is [the token of the user](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line) that will post the comment,
 - `repository` is the repository url that will be watched for new PRs (it MUST be public)
 
-4. Install style-analyzer as it can be found at [irinakhismatullina/style-analyzer::typos-analyzer](https://github.com/irinakhismatullina/style-analyzer/tree/feature/typos-analyzer)
+4. Change analyzer `config.yml`; exposed port should be `10302`
+
+5. Install style-analyzer as it can be found at [irinakhismatullina/style-analyzer::typos-analyzer](https://github.com/irinakhismatullina/style-analyzer/tree/feature/typos-analyzer)
 ```shell
 $ python3 -m lookout run lookout.style.typos_checker -c config.yml
 ```
 
-5. Open a PR with a Java file, containing some typos in some code comments
+6. Open a PR with a Java file, containing some typos in some code comments
 ```java
 package com.iluwatar.callback;
 
