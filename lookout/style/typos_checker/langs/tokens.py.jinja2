@@ -1,0 +1,9 @@
+import re
+
+RESERVED = [
+{% for op in reserved | sort %}
+    "{{ op | replace("\\", "\\\\") | replace('"', '\\"') }}",
+{% endfor %}
+]
+
+PARSER = re.compile("|".join(re.escape(i) for i in RESERVED) + r"|\s+")
