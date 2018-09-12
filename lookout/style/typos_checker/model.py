@@ -8,7 +8,8 @@ from lookout.core.analyzer import AnalyzerModel
 from lookout.style.format.rules import Rules, Rule, RuleAttribute, RuleStats
 
 
-class FormatModel(AnalyzerModel):
+class TypoModel(AnalyzerModel):
+    # TODO: everything needs to change
     """
     A modelforge model to store Rules instances.
     It is required to store all the Rules for different programming languages in a single model,
