@@ -1,6 +1,5 @@
 import pandas
 import numpy
-import fastText
 import keras
 from keras.models import Sequential
 from keras.layers import Dense
@@ -68,10 +67,3 @@ def create_and_train_model(fasttext, data: pandas.DataFrame,
 
 def get_predictions(fasttext, model: keras.models.Sequential, typos: pandas.Series):
     return model.predict(get_features(fasttext, typos))
-
-
-def create_and_train_nn_prediction(args):
-    fasttext = fastText.load_model(args.emb_file)
-    train_data = pandas.read_csv(args.train_file)
-    train_model(fasttext, train_data, args.save_model_file, args.batch_size,
-                args.lr, args.decay, args.num_epochs)
