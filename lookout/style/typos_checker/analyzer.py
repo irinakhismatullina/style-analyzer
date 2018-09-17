@@ -34,20 +34,20 @@ class CommentsCheckingAnalyzer(Analyzer):
                 for index, comment_node in enumerate(comment_nodes):
                     if index in suggestions.keys():
                         corrections = suggestions[index]
+                        line_suggestions = ""
                         for token in corrections.keys():
-                            comment = Comment()
-                            comment.file = change.head.path
                             corrections_line = ""
                             for candidate in corrections[token]:
-                                corrections_line += candidate[0] + " (%d)," % \
-                                                    int(candidate[1] * 100)
-                            comment.text = "Typo inside comment in token '%s'. " \
-                                           "Possible corrections:" % token +\
-                                           corrections_line[:-1]
-                            comment.line = comment_node.start_position.line
-                            comment.confidence = int(
-                                corrections[token][0][1] * 100)
-                            comments.append(comment)
+                                corrections_line += " `%s` (%d)," % \
+                                                    (candidate[0], int(candidate[1] * 100) )
+                            line_suggestions += "Typo inside comment in word `%s`. " \
+                                           "Possible corrections: %s\n" % \
+                                           ( token, corrections_line[:-1] )
+                        comment = Comment()
+                        comment.file = change.head.path
+                        comment.line = comment_node.start_position.line
+                        comment.text = line_suggestions
+                        comments.append(comment)
         return comments
 
     @classmethod
