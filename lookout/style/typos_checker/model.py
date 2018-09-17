@@ -25,7 +25,7 @@ class CommentsCheckingModel(AnalyzerModel):
     def correct_comments(self, comments: list) -> pandas.DataFrame:
         typos = []
         for comment_id, comment in enumerate(comments):
-            split = re.compile("\w+").findall(comment)
+            split = re.compile("\w+").findall(comment.lower())
             for i in range(len(split)):
                 if split[i] in self.vocabulary:
                     continue
