@@ -20,12 +20,13 @@ class CommentsCheckingAnalyzer(Analyzer):
     @with_changed_uasts_and_contents
     def analyze(self, ptr_from: ReferencePointer, ptr_to: ReferencePointer,
                 data_request_stub: DataStub, **data) -> [Comment]:
+        commentFilter = "//*[@roleComment]"
         changes = data["changes"]
         comments = []
 
         for change in changes:
-            old_comments = set([node.token for node in bblfsh.filter(change.base.uast, "//*[@roleIComment]")])
-            comment_nodes = [node for node in bblfsh.filter(change.head.uast, "//*[@roleComment]")
+            old_comments = set([node.token for node in bblfsh.filter(change.base.uast, commentFilter)])
+            comment_nodes = [node for node in bblfsh.filter(change.head.uast, commentFilter)
                              if node.token not in old_comments]
             comment_tokens = [node.token for node in comment_nodes]
             if len(comment_tokens) > 0:
