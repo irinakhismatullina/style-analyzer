@@ -43,9 +43,9 @@ DEFAULT_CORRECTOR_CONFIG = {
         "radius": 3,
         "max_distance": 2,
         "neighbors_number": 0,
-        "edit_dist_number": 20,
-        "max_corrected_length": 12,
-        "start_pool_size": 64,
+        "edit_dist_number": 4,
+        "max_corrected_length": 30,
+        "start_pool_size": 256,
         "chunksize": 256,
     },
     "ranking": {
