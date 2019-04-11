@@ -375,18 +375,21 @@ class CandidatesGenerator(Model):
         for key, val in self.wv.vocab.items():
             vocab_strings[val.index] = key
             vocab_counts[val.index] = val.count
-        hash2index = numpy.zeros(len(self.wv.hash2index), dtype=numpy.uint32)
-        for key, val in self.wv.hash2index.items():
-            hash2index[val] = key
+        buckets_word_lengths = numpy.zeros(len(self.wv.buckets_word), dtype=numpy.uint32)
+        buckets_word_values = []
+        for word_index in range(len(self.wv.buckets_word)):
+            buckets = self.wv.buckets_word[word_index]
+            buckets_word_lengths[word_index] = len(buckets)
+            buckets_word_values.extend(sorted(buckets))
         tree["wv"] = {
             "vocab": {"strings": merge_strings(vocab_strings), "counts": vocab_counts},
-            "vectors": self.wv.vectors,
+            "vectors_vocab": self.wv.vectors_vocab,
             "min_n": self.wv.min_n,
             "max_n": self.wv.max_n,
             "bucket": self.wv.bucket,
-            "num_ngram_vectors": self.wv.num_ngram_vectors,
             "vectors_ngrams": self.wv.vectors_ngrams,
-            "hash2index": hash2index,
+            "buckets_word": {"lengths": buckets_word_lengths,
+                             "values": numpy.array(buckets_word_values)},
         }
         return tree
 
@@ -409,19 +412,22 @@ class CandidatesGenerator(Model):
             offset += length
         self.checker._deletes = deletes
         self.checker._words = {w: self.checker._words[i] for i, w in enumerate(words)}
-        vectors = self.wv["vectors"]
+        vectors_vocab = self.wv["vectors_vocab"]
         wv = FastTextKeyedVectors(vectors.shape[1], self.wv["min_n"], self.wv["max_n"],
                                   self.wv["bucket"], True)
-        wv.vectors = numpy.array(vectors)
+        wv.vectors_vocab = numpy.array(vectors_vocab)
         vocab = split_strings(self.wv["vocab"]["strings"])
         wv.vocab = {
             s: Vocab(index=i, count=self.wv["vocab"]["counts"][i])
             for i, s in enumerate(vocab)}
         wv.bucket = self.wv["bucket"]
         wv.index2word = wv.index2entity = vocab
-        wv.num_ngram_vectors = self.wv["num_ngram_vectors"]
         wv.vectors_ngrams = numpy.array(self.wv["vectors_ngrams"])
-        wv.hash2index = {k: v for v, k in enumerate(self.wv["hash2index"])}
+        wv.buckets_word = {}
+        cumsum = 0
+        for word_index, length in enumerate(tree["buckets_word"]["lengths"]):
+            wv.buckets_word[word_index] = self.wv[cumsum:cumsum + length]
+            cumsum += length
         self.wv = wv
 
 
