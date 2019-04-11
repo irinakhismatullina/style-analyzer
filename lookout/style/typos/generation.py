@@ -3,7 +3,7 @@ from itertools import chain
 from multiprocessing import Pool
 from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Set, Union
 
-from gensim.models import FastText
+from gensim.models.fasttext import load_facebook_vectors
 from gensim.models.keyedvectors import FastTextKeyedVectors, Vocab
 from modelforge import merge_strings, Model, split_strings
 import numpy
@@ -83,7 +83,7 @@ class CandidatesGenerator(Model):
         self.checker = SymSpell(max_dictionary_edit_distance=self.config["max_distance"],
                                 prefix_length=self.config["max_corrected_length"])
         self.checker.load_dictionary(vocabulary_file)
-        self.wv = FastText.load_fasttext_format(embeddings_file).wv
+        self.wv = load_facebook_vectors(embeddings_file)
         self.tokens = set(read_vocabulary(vocabulary_file))
         self.frequencies = read_frequencies(frequencies_file)
         self.min_freq = min(self.frequencies.values())
