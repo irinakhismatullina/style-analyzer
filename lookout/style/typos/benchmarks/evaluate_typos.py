@@ -37,8 +37,7 @@ def evaluate_typos_on_identifiers(dataset: str = TYPOS_DATASET,
         identifiers["sugg " + str(pos)] = [correction[pos][0] if pos < len(correction) else "" for
                                            correction in corrections]
     if mistakes_output is not None:
-        identifiers[identifiers["sugg 0"] != identifiers["correct"]][
-            ["wrong", "sugg 0", "correct"]].to_csv(mistakes_output)
+        identifiers[identifiers["sugg 0"] != identifiers["correct"]].to_csv(mistakes_output)
     template = load_jinja2_template(os.path.join(TEMPLATE_DIR, "quality_on_identifiers.md.jinja2"))
     return template.render(identifiers=identifiers, suggestions=suggestions,
                            vocabulary_tokens=analyzer.corrector.generator.tokens,
