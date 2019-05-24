@@ -226,14 +226,13 @@ class CandidatesGenerator(Model):
                                            self.config["neighbors_number"])
             candidate_tokens.extend(typo_neighbors)
             if len(typo_info.before + typo_info.after) > 0:
-                context_neighbors = self._closest(
+                context_neighbors = [candidate for candidate in self._closest(
                     self._compound_vec("%s %s" % (typo_info.before, typo_info.after)),
                     self.config["neighbors_number"])
+                                     if candidate in self.tokens]
                 candidate_tokens.extend(context_neighbors)
-        candidate_tokens = {candidate for candidate in candidate_tokens
-                            if candidate in self.tokens}
-        candidate_tokens.add(typo_info.typo)
-        return candidate_tokens
+        candidate_tokens.append(typo_info.typo)
+        return set(candidate_tokens)
 
     def _generate_features(self, typo_info: TypoInfo, dist: int, typo_vec: numpy.ndarray,
                            candidate: str, candidate_vec: numpy.ndarray,
