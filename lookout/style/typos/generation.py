@@ -52,6 +52,7 @@ class CandidatesGenerator(Model):
         self.tokens = set()
         self.frequencies = {}
         self.min_freq = 0
+        self.config = DEFAULT_CORRECTOR_CONFIG["generation"]
 
     def construct(self, vocabulary_file: str, frequencies_file: str, embeddings_file: str,
                   config: Optional[Mapping[str, Any]] = None) -> None:
@@ -109,7 +110,7 @@ class CandidatesGenerator(Model):
         """
         if config is None:
             config = {}
-        self.config = merge_dicts(DEFAULT_CORRECTOR_CONFIG["generation"], config)
+        self.config = merge_dicts(self.config, config)
 
     def expand_vocabulary(self, additional_tokens: Iterable[str]) -> None:
         """
@@ -290,12 +291,12 @@ class CandidatesGenerator(Model):
                 context_vec),
             ).astype(numpy.float32)
         else:
-            features = numpy.concatenate(
-                (
+            features = numpy.array(
+                [
                     self._freq(typo_info.typo),
                     self._freq(candidate),
                     self._freq_relation(typo_info.typo, candidate),
-                )).astype(numpy.float32)
+                ]).astype(numpy.float32)
         return Features(typo_info.index, typo_info.typo, candidate, features)
 
     def _vec(self, token: str) -> numpy.ndarray:
