@@ -26,7 +26,6 @@ class MetricsTest(unittest.TestCase):
                            3: [Candidate("taken", 0.98), Candidate("token", 0.9)]}
 
     def test_get_score(self):
-
         self.assertDictEqual(get_scores(self.data, self.suggestions, ScoreMode.detection),
                              {"accuracy": 0.75, "precision": 2 / 3, "recall": 1.0, "f1": 0.8})
         self.assertDictEqual(get_scores(self.data, self.suggestions, ScoreMode.correction, k=1),
