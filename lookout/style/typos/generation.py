@@ -255,39 +255,48 @@ class CandidatesGenerator(Model):
         before_vec = self._compound_vec(typo_info.before)
         after_vec = self._compound_vec(typo_info.after)
         context_vec = self._compound_vec(context)
-        return Features(typo_info.index, typo_info.typo, candidate, numpy.concatenate((
-            (
-                self._freq(typo_info.typo),
-                self._freq(candidate),
-                self._freq_relation(typo_info.typo, candidate),
-                self._cos(typo_vec, before_vec),
-                self._cos(typo_vec, after_vec),
-                self._cos(typo_vec, context_vec),
-                self._cos(candidate_vec, before_vec),
-                self._cos(candidate_vec, after_vec),
-                self._cos(candidate_vec, context_vec),
-                self._avg_cos(typo_vec, typo_info.before),
-                self._avg_cos(typo_vec, typo_info.after),
-                self._avg_cos(typo_vec, context),
-                self._avg_cos(candidate_vec, typo_info.before),
-                self._avg_cos(candidate_vec, typo_info.after),
-                self._avg_cos(candidate_vec, context),
-                self._min_cos(typo_vec, typo_info.before),
-                self._min_cos(typo_vec, typo_info.after),
-                self._min_cos(typo_vec, context),
-                self._min_cos(candidate_vec, typo_info.before),
-                self._min_cos(candidate_vec, typo_info.after),
-                self._min_cos(candidate_vec, context),
-                self._cos(typo_vec, candidate_vec),
-                dist,
-                int(candidate in self.tokens),
-            ),
-            before_vec,
-            after_vec,
-            typo_vec,
-            candidate_vec,
-            context_vec),
-        ).astype(numpy.float32))
+        if self.config["use_emb"]:
+            features = numpy.concatenate((
+                (
+                    self._freq(typo_info.typo),
+                    self._freq(candidate),
+                    self._freq_relation(typo_info.typo, candidate),
+                    self._cos(typo_vec, before_vec),
+                    self._cos(typo_vec, after_vec),
+                    self._cos(typo_vec, context_vec),
+                    self._cos(candidate_vec, before_vec),
+                    self._cos(candidate_vec, after_vec),
+                    self._cos(candidate_vec, context_vec),
+                    self._avg_cos(typo_vec, typo_info.before),
+                    self._avg_cos(typo_vec, typo_info.after),
+                    self._avg_cos(typo_vec, context),
+                    self._avg_cos(candidate_vec, typo_info.before),
+                    self._avg_cos(candidate_vec, typo_info.after),
+                    self._avg_cos(candidate_vec, context),
+                    self._min_cos(typo_vec, typo_info.before),
+                    self._min_cos(typo_vec, typo_info.after),
+                    self._min_cos(typo_vec, context),
+                    self._min_cos(candidate_vec, typo_info.before),
+                    self._min_cos(candidate_vec, typo_info.after),
+                    self._min_cos(candidate_vec, context),
+                    self._cos(typo_vec, candidate_vec),
+                    dist,
+                    int(candidate in self.tokens),
+                ),
+                before_vec,
+                after_vec,
+                typo_vec,
+                candidate_vec,
+                context_vec),
+            ).astype(numpy.float32)
+        else:
+            features = numpy.concatenate(
+                (
+                    self._freq(typo_info.typo),
+                    self._freq(candidate),
+                    self._freq_relation(typo_info.typo, candidate),
+                )).astype(numpy.float32)
+        return Features(typo_info.index, typo_info.typo, candidate, features)
 
     def _vec(self, token: str) -> numpy.ndarray:
         return self.wv[token]
