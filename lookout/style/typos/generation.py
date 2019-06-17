@@ -145,8 +145,9 @@ class CandidatesGenerator(Model):
         candidates = pandas.DataFrame(list(chain.from_iterable(candidates)))
         candidates.columns = [Columns.Id, Columns.Token, Columns.Candidate, Columns.Features]
         candidates.loc[:, Columns.Id] = candidates[Columns.Id].astype(data.index.dtype)
+        print("Found %d candidates" % len(candidates))
         if save_candidates_file is not None:
-            candidates.to_csv(save_candidates_file, compression="xz")
+            candidates.to_pickle(save_candidates_file)
         return candidates
 
     def dump(self) -> str:
@@ -210,7 +211,7 @@ class CandidatesGenerator(Model):
         return candidates
 
     def _get_candidate_tokens(self, typo_info: TypoInfo) -> Set[str]:
-        candidate_tokens = []
+        candidate_tokens = set()
         last_dist = -1
         edit_candidates_count = 0
         if self.config["edit_dist_number"] > 0:
@@ -220,19 +221,19 @@ class CandidatesGenerator(Model):
                     last_dist = suggestion.distance
                 if edit_candidates_count >= self.config["edit_dist_number"]:
                     continue
-                candidate_tokens.append(suggestion.term)
+                candidate_tokens.add(suggestion.term)
                 edit_candidates_count += 1
         if self.config["neighbors_number"] > 0:
             typo_neighbors = self._closest(self._vec(typo_info.typo),
                                            self.config["neighbors_number"])
-            candidate_tokens.extend(typo_neighbors)
+            candidate_tokens |= set(typo_neighbors)
             if len(typo_info.before + typo_info.after) > 0:
                 context_neighbors = self._closest(
                     self._compound_vec("%s %s" % (typo_info.before, typo_info.after)),
                     self.config["neighbors_number"])
-                candidate_tokens.extend(context_neighbors)
-        candidate_tokens = {candidate for candidate in candidate_tokens
-                            if candidate in self.tokens}
+                candidate_tokens |= set(context_neighbors)
+            candidate_tokens = {candidate for candidate in candidate_tokens
+                                if candidate in self.tokens}
         candidate_tokens.add(typo_info.typo)
         return candidate_tokens
 
@@ -256,6 +257,7 @@ class CandidatesGenerator(Model):
         before_vec = self._compound_vec(typo_info.before)
         after_vec = self._compound_vec(typo_info.after)
         context_vec = self._compound_vec(context)
+        inside_voc = True if dist > 0 else int(candidate in self.tokens)
         if self.config["use_emb"]:
             features = numpy.concatenate((
                 (
@@ -282,7 +284,7 @@ class CandidatesGenerator(Model):
                     self._min_cos(candidate_vec, context),
                     self._cos(typo_vec, candidate_vec),
                     dist,
-                    int(candidate in self.tokens),
+                    inside_voc,
                 ),
                 before_vec,
                 after_vec,
@@ -296,6 +298,8 @@ class CandidatesGenerator(Model):
                     self._freq(typo_info.typo),
                     self._freq(candidate),
                     self._freq_relation(typo_info.typo, candidate),
+                    dist,
+                    inside_voc,
                 ]).astype(numpy.float32)
         return Features(typo_info.index, typo_info.typo, candidate, features)
 
@@ -303,7 +307,7 @@ class CandidatesGenerator(Model):
         return self.wv[token]
 
     def _freq(self, token: str) -> float:
-        return float(self.frequencies.get(token, self.min_freq))
+        return float(self.frequencies.get(token, 0))
 
     @staticmethod
     def _cos(first_vec: numpy.ndarray, second_vec: numpy.ndarray) -> float:

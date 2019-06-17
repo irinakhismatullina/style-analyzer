@@ -136,7 +136,7 @@ class TyposCorrector(Model):
             candidates = self.generator.generate_candidates(
                 data, self.processes_number, save_candidates_file)
         else:
-            candidates = pandas.read_csv(candidates, index_col=0, keep_default_na=False)
+            candidates = pandas.read_pickle(candidates)
             self._log.info("loaded candidates from %s", candidates)
         self.ranker.fit(data[Columns.CorrectToken], get_candidates_metadata(candidates),
                         get_candidates_features(candidates))
@@ -172,7 +172,7 @@ class TyposCorrector(Model):
             candidates = self.generator.generate_candidates(
                 data, self.processes_number, save_candidates_file)
         else:
-            candidates = pandas.read_csv(candidates, index_col=0, keep_default_na=False)
+            candidates = pandas.read_pickle(candidates)
         return self.ranker.rank(get_candidates_metadata(candidates),
                                 get_candidates_features(candidates), n_candidates, return_all)
 

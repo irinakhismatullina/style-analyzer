@@ -52,6 +52,8 @@ DEFAULT_CORRECTOR_CONFIG = {
     "ranking": {
         "train_rounds": 4000,
         "early_stopping": 200,
+        "verbose_eval": False,
+        "use_random_forest": False,
         "boost_param": {
             "max_depth": 6,
             "eta": 0.03,

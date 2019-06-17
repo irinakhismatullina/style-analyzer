@@ -5,8 +5,10 @@ from typing import Any, Dict, List, Mapping, Optional
 from modelforge import Model
 import numpy
 import pandas
+from sklearn.ensemble import RandomForestClassifier
 from sourced.ml.core.models.license import DEFAULT_LICENSE
 import xgboost as xgb
+import pickle
 
 from lookout.style.common import merge_dicts
 from lookout.style.typos.config import DEFAULT_CORRECTOR_CONFIG
@@ -39,6 +41,7 @@ class CandidatesRanker(Model):
         super().__init__(**kwargs)
         self.set_config(config)
         self.bst = None  # type: xgb.Booster
+        self.rf = None
 
     def set_config(self, config: Optional[Mapping[str, Any]] = None) -> None:
         """
@@ -70,15 +73,20 @@ class CandidatesRanker(Model):
         self._log.info("candidates shape %s", candidates.shape)
         self._log.info("features shape %s", features.shape)
         labels = self._create_labels(identifiers, candidates)
-        edge = int(features.shape[0] * (1 - val_part))
-        data_train = xgb.DMatrix(features[:edge, :], label=labels[:edge])
-        data_val = xgb.DMatrix(features[edge:, :], label=labels[edge:])
-        self.config["boost_param"]["scale_pos_weight"] = float(
-            1.0 * (edge - numpy.sum(labels[:edge])) / numpy.sum(labels[:edge]))
-        evallist = [(data_train, "train"), (data_val, "validation")]
-        self.bst = xgb.train(self.config["boost_param"], data_train, self.config["train_rounds"],
-                             evallist, early_stopping_rounds=self.config["early_stopping"],
-                             verbose_eval=False)
+        print("Total %.3f%% of corrections found" % (1.0 * sum(labels) / len(identifiers)))
+        if self.config["use_random_forest"]:
+            self.rf = RandomForestClassifier()
+            self.rf.fit(features, labels)
+        else:
+            edge = int(features.shape[0] * (1 - val_part))
+            data_train = xgb.DMatrix(features[:edge, :], label=labels[:edge])
+            data_val = xgb.DMatrix(features[edge:, :], label=labels[edge:])
+            self.config["boost_param"]["scale_pos_weight"] = float(
+                1.0 * (edge - numpy.sum(labels[:edge])) / numpy.sum(labels[:edge]))
+            evallist = [(data_train, "train"), (data_val, "validation")]
+            self.bst = xgb.train(self.config["boost_param"], data_train, self.config["train_rounds"],
+                                 evallist, early_stopping_rounds=self.config["early_stopping"],
+                                 verbose_eval=self.config["verbose_eval"])
         self._log.debug("successfully fitted")
 
     def rank(self, candidates: pandas.DataFrame, features: numpy.ndarray, n_candidates: int = 3,
@@ -94,8 +102,11 @@ class CandidatesRanker(Model):
         :return: Dictionary `{id : [(candidate, correctness_proba), ...]}`, candidates are sorted \
                  by correctness probability in a descending order.
         """
-        dtest = xgb.DMatrix(features)
-        test_probs = self.bst.predict(dtest, ntree_limit=self.bst.best_ntree_limit)
+        if self.rf is not None:
+            test_probs = self.rf.predict_proba(features)[:, 1]
+        else:
+            dtest = xgb.DMatrix(features)
+            test_probs = self.bst.predict(dtest, ntree_limit=self.bst.best_ntree_limit)
         return rank_candidates(candidates, test_probs, n_candidates, return_all)
 
     def dump(self):
@@ -129,6 +140,10 @@ class CandidatesRanker(Model):
         else:
             tree["bst"] = numpy.array(self.bst.save_raw())
             tree["best_ntree_limit"] = self.bst.best_ntree_limit
+        if self.rf is None:
+            tree["rf"] = numpy.array([])
+        else:
+            tree["rf"] = pickle.dumps(self.rf)
         return tree
 
     def _load_tree(self, tree: dict) -> None:
@@ -139,3 +154,7 @@ class CandidatesRanker(Model):
             self.bst = xgb.Booster(model_file=tree["bst"].data)
             self.bst.best_ntree_limit = self.best_ntree_limit
             del self.best_ntree_limit
+        if self.rf.shape == (0,):
+            self.rf = None
+        else:
+            self.rf = pickle.loads(self.rf)
