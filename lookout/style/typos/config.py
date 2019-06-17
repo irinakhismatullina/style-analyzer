@@ -42,7 +42,6 @@ DEFAULT_CORRECTOR_CONFIG = {
     "generation": {
         "radius": 3,
         "max_distance": 2,
-        "use_emb": True,
         "neighbors_number": 0,
         "edit_dist_number": 20,
         "max_corrected_length": 12,
