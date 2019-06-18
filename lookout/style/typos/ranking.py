@@ -78,11 +78,15 @@ class CandidatesRanker(Model):
             self.rf = RandomForestClassifier()
             self.rf.fit(features, labels)
         else:
-            edge = int(features.shape[0] * (1 - val_part))
-            data_train = xgb.DMatrix(features[:edge, :], label=labels[:edge])
-            data_val = xgb.DMatrix(features[edge:, :], label=labels[edge:])
+            all_tokens = numpy.array(list(set(candidates[Columns.Token])))
+            indices = numpy.random.choice([True, False], size=len(all_tokens),
+                                          p=[1 - val_part, val_part])
+            train_token = {all_tokens[i]: indices[i] for i in range(len(all_tokens))}
+            in_train = numpy.array([train_token[row[Columns.Token]] for _, row in candidates.iterrows()])
+            data_train = xgb.DMatrix(features[in_train], label=labels[in_train])
+            data_val = xgb.DMatrix(features[~in_train], label=labels[~in_train])
             self.config["boost_param"]["scale_pos_weight"] = float(
-                1.0 * (edge - numpy.sum(labels[:edge])) / numpy.sum(labels[:edge]))
+                1.0 * (numpy.sum(in_train) - numpy.sum(labels[in_train])) / numpy.sum(labels[in_train]))
             evallist = [(data_train, "train"), (data_val, "validation")]
             self.bst = xgb.train(self.config["boost_param"], data_train, self.config["train_rounds"],
                                  evallist, early_stopping_rounds=self.config["early_stopping"],
