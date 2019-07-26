@@ -2,7 +2,6 @@ from functools import partial
 import logging
 from multiprocessing import Pool
 import os
-import random
 import string
 from typing import Optional, Tuple
 
@@ -20,10 +19,10 @@ def rand_insert(token: str) -> str:
     """
     Add a random letter inside the token.
     """
-    letter = random.choice(letters)
+    letter = numpy.random.choice(letters)
     if len(token) == 0:
         return letter
-    pos = random.choice(range(len(token) + 1))
+    pos = numpy.random.choice(range(len(token) + 1))
     if pos == len(token):
         return token + letter
     return token[:pos] + letter + token[pos:]
@@ -35,7 +34,7 @@ def rand_delete(token: str) -> str:
     """
     if len(token) == 0:
         return token
-    pos = random.choice(range(len(token)))
+    pos = numpy.random.choice(range(len(token)))
     return token[:pos] + token[pos + 1:]
 
 
@@ -45,8 +44,9 @@ def rand_substitution(token: str) -> str:
     """
     if len(token) == 0:
         return token
-    pos = random.choice(range(len(token)))
-    return token[:pos] + random.choice([c for c in letters if c != token[pos]]) + token[pos + 1:]
+    pos = numpy.random.choice(range(len(token)))
+    return token[:pos] + numpy.random.choice(
+        [c for c in letters if c != token[pos]]) + token[pos + 1:]
 
 
 def rand_swap(token: str) -> str:
@@ -55,9 +55,9 @@ def rand_swap(token: str) -> str:
     """
     if len(token) < 2 or len(set(token)) == 1:
         return token
-    pos = random.choice(range(len(token) - 1))
+    pos = numpy.random.choice(range(len(token) - 1))
     while token[pos] == token[pos + 1]:
-        pos = random.choice(range(len(token) - 1))
+        pos = numpy.random.choice(range(len(token) - 1))
     return token[:pos] + token[pos + 1] + token[pos] + token[pos + 2:]
 
 
@@ -67,11 +67,11 @@ def _rand_typo(token_split: Tuple[str, str, bool], add_typo_probability: float) 
     if len(token) > 1 and corrupt:
         typoed_token = ""
         while len(typoed_token) < 2 or typoed_token == token:
-            typoed_token = random.choice([rand_insert, rand_delete, rand_substitution,
-                                          rand_swap])(token)
-            while random.uniform(0, 1) < add_typo_probability:
-                typoed_token = random.choice([rand_insert, rand_delete, rand_substitution,
-                                              rand_swap])(typoed_token)
+            typoed_token = numpy.random.choice([rand_insert, rand_delete, rand_substitution,
+                                                rand_swap])(token)
+            while numpy.random.uniform(0, 1) < add_typo_probability:
+                typoed_token = numpy.random.choice([rand_insert, rand_delete, rand_substitution,
+                                                    rand_swap])(typoed_token)
         split = split.replace(token, typoed_token)
     return typoed_token, split
 

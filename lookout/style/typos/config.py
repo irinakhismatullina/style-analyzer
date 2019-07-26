@@ -28,7 +28,8 @@ DEFAULT_CORRECTOR_CONFIG = {
         "path": str(DEFAULT_DATA_DIR / "fasttext.bin"),  # Where to store trained fasttext model
         "dim": 10,  # Number of dimensions of embeddings
         "bucket": 200000,  # Number of hash buckets in the model
-        "adjust_frequencies": True,  # Whether to divide identifiers frequencies by tokens number.
+        "adjust_frequencies": True,  # Whether to divide identifiers frequencies by tokens number
+        "random_seed": 42, # Seed for random training data generation
     },
     "datasets": {
         "portion": 400000,
@@ -39,6 +40,7 @@ DEFAULT_CORRECTOR_CONFIG = {
         "train_path": str(DEFAULT_DATA_DIR / "train.csv"),
         "test_path": str(DEFAULT_DATA_DIR / "test.csv"),
         "processes_number": multiprocessing.cpu_count(),
+        "random_seed": 42,
     },
     "generation": {
         "radius": 3,

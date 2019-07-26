@@ -7,6 +7,7 @@ import tempfile
 from typing import Any, Dict, Mapping, Optional, Tuple
 import urllib.request
 
+import numpy
 import pandas
 from sklearn.model_selection import train_test_split
 from smart_open import smart_open
@@ -201,6 +202,7 @@ def prepare_data(config: Optional[Mapping[str, Any]] = None) -> pandas.DataFrame
 
     # Expand dataframe by splits (repeat rows for every token in splits)
     data[Columns.Split] = data[Columns.Split].astype(str)
+    data = data.sort_values(by=Columns.Frequency, ascending=False)
     log.debug("expand data by splits")
     flat_data = flatten_df_by_column(data, Columns.Split, Columns.Token,
                                      apply_function=lambda x: x.split())
@@ -269,7 +271,9 @@ def train_fasttext(data: pandas.DataFrame, config: Optional[Mapping[str, Any]] =
         weights = data[Columns.Frequency] / tokens_number
     else:
         weights = data[Columns.Frequency]
-    train_data = data[tokens_number > 1].sample(config["size"], weights=weights, replace=True)
+    train_data = data[tokens_number > 1].sample(config["size"], weights=weights, replace=True,
+                                                random_state=config["random_seed"])
+    numpy.random.seed(config["random_seed"])
     if config["corrupt"]:
         train_data = corrupt_tokens_in_df(train_data, config["typo_probability"],
                                           config["add_typo_probability"])
@@ -317,17 +321,18 @@ def get_datasets(prepared_data: pandas.DataFrame,
     # With replace=True we get the real examples distribution, but there's a small
     # probability of having the same examples of misspellings in train and test datasets
     # (it IS small because a big number of random typos can be made in a single word)
+    numpy.random.seed(config["random_seed"])
     data = prepared_data[[len(x) > 1 for x in prepared_data[Columns.Token]]].sample(
         config["train_size"] + config["test_size"], weights=Columns.Frequency,
-        replace=True)
+        replace=True, random_state=config["random_seed"])
     train, test = train_test_split(data[[Columns.Token, Columns.Split]],
-                                   test_size=config["test_size"])
+                                   test_size=config["test_size"], random_state=config["random_seed"])
     train.reset_index(drop=True, inplace=True)
     test.reset_index(drop=True, inplace=True)
     log.info("train dataset shape: %s", train.shape)
     log.info("test dataset shape: %s", test.shape)
     train = corrupt_tokens_in_df(train, config["typo_probability"], config["add_typo_probability"],
-                                 config["processes_number"])
+                                 config["processes_number"],)
     test = corrupt_tokens_in_df(test, config["typo_probability"], config["add_typo_probability"],
                                 config["processes_number"])
     if config["test_path"] is not None:
