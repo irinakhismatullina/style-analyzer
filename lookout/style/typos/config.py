@@ -12,7 +12,7 @@ DEFAULT_CORRECTOR_CONFIG = {
         "frequency_column": "num_occ",
         "vocabulary": {
             "stable": 6000,
-            "suspicious": 2500,
+            "suspicious": 1500,
             "non_suspicious": 3000,
         },
         "raw_data_filename": "raw_data.csv",
